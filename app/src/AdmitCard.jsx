@@ -22,29 +22,15 @@ const AdmitCard = ({
   idno,
 }) => {
   return (
-    <div
-      className="hindi"
-      style={{
-        background: "#fff",
-        color: "#000",
-        width: "1000px",
-        padding: "20px",
-        margin: "0 auto",
-        lineHeight: "30px",
-        boxSizing: "border-box",
-        fontFamily: "Arial, sans-serif",
-        fontSize: "18px",
-      }}
-    >
+    <div className="hindi admit-card">
       {/* Header */}
-      <table style={{ width: "100%", marginBottom: "5px" }}>
+      <table className="header-table" style={{ width: "100%", marginBottom: "5px" }}>
         <tbody>
           <tr>
-            <td style={{ width: "170px" }}>
+            <td style={{ width: "17%" }}>
               <img
-                src="http://ukdeled.com/images/ubse_white.jpg"
-                width="130"
-                height="130"
+                src="/ubse_white.jpg"
+                style={{ maxWidth: "130px", width: "100%", height: "auto" }}
                 alt="Logo"
               />
             </td>
@@ -57,21 +43,21 @@ const AdmitCard = ({
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: "40px", fontWeight: "400" }}>
+              <div className="header-title" style={{ fontSize: "30px", fontWeight: "400" }}>
                 उत्तराखण्ड विद्यालयी शिक्षा परिषद्, रामनगर (नैनीताल)
               </div>
-              <div style={{ fontSize: "26px", fontWeight: "bold" }}>
+              <div className="header-subtitle" style={{ fontSize: "22px", fontWeight: "bold" }}>
                 द्विवर्षीय डी. एल. एड. (D.El.Ed.) प्रशिक्षण हेतु प्रवेश परीक्षा 2025-26
               </div>
-              <div style={{ fontSize: "30px", fontWeight: "bold" }}>
+              <div className="header-main" style={{ fontSize: "20px", fontWeight: "bold" }}>
                 प्रवेश पत्र (Admit Card)
               </div>
             </td>
 
-            <td style={{ width: "170px", textAlign: "right" }}>
+            <td style={{ width: "17%", textAlign: "right" }}>
               <img
                 src={qrcode}
-                style={{ height: "130px", width: "130px" }}
+                style={{ maxWidth: "130px", width: "100%", height: "auto" }}
                 alt="QR Code"
               />
             </td>
@@ -89,18 +75,18 @@ const AdmitCard = ({
       >
         <tbody>
           <tr>
-            <td style={{ width: "120px" }}>अनुक्रमांक</td>
-            <td style={{ width: "280px", fontSize: "28px" }}>
+            <td style={{ width: "12%" }}>अनुक्रमांक</td>
+            <td style={{ width: "28%", fontSize: "28px" }}>
               <b>{roll_t1}</b>
             </td>
-            <td style={{ width: "40px", textAlign: "center" }}>लिंग</td>
-            <td style={{ width: "100px", textAlign: "center" }}>जन्मतिथि</td>
-            <td style={{ width: "40px", textAlign: "center" }}>श्रेणी</td>
-            <td style={{ width: "90px", textAlign: "center" }}>क्षैतिज श्रेणी</td>
-            <td rowSpan="4" style={{ width: "160px", textAlign: "center", padding: "0px" }}>
-              <img src={photo} height="160" width="140" alt="Photo" />
+            <td style={{ width: "4%", textAlign: "center" }}>लिंग</td>
+            <td style={{ width: "10%", textAlign: "center" }}>जन्मतिथि</td>
+            <td style={{ width: "4%", textAlign: "center" }}>श्रेणी</td>
+            <td style={{ width: "9%", textAlign: "center" }}>क्षैतिज श्रेणी</td>
+            <td rowSpan="4" style={{ width: "16%", textAlign: "center", padding: "0px" }}>
+              <img src={photo} style={{ maxWidth: "140px", width: "100%", height: "auto" }} alt="Photo" />
               <br />
-              <img src={sign} height="40" width="160" alt="Signature" />
+              <img src={sign} style={{ maxWidth: "160px", width: "100%", height: "auto" }} alt="Signature" />
             </td>
           </tr>
 
@@ -142,7 +128,7 @@ const AdmitCard = ({
             <td>पत्र व्यवहार का पता</td>
             <td colSpan="4">{address}</td>
             <td colSpan="2" style={{ textAlign: "center" }}>
-              <img src="http://ukdeled.com/images/Sign.jpg" width="100" alt="Authority Sign" />
+              <img src="/Sign1.jpg" style={{ maxWidth: "100px", width: "100%", height: "auto" }} alt="Authority Sign" />
               <br />
               सचिव<br />
               उत्तराखण्ड विद्यालयी शिक्षा परिषद्<br />
@@ -153,7 +139,7 @@ const AdmitCard = ({
       </table>
 
       {/* Instructions */}
-      <table style={{ width: "100%", lineHeight: "32px", marginTop: "20px" }}>
+      <table className="instructions-table" style={{ width: "100%", lineHeight: "32px", marginTop: "20px" }}>
   <tbody>
     <tr>
       <td colSpan="2" style={{ textAlign: "center", padding: "10px", fontSize: "30px" }}>
@@ -162,7 +148,7 @@ const AdmitCard = ({
     </tr>
 
     <tr>
-      <td style={{ width: "25px", verticalAlign: "top" }}>1.</td>
+      <td style={{ width: "5%", minWidth: "25px", verticalAlign: "top" }}>1.</td>
       <td>
         अभ्यर्थी परीक्षा तिथि को परीक्षा प्रारम्भ होने से 1 घंटा पूर्व निर्धारित परीक्षा केंद्र पर उपस्थित हो जायें |
         परीक्षा आरम्भ होने के 30 मिनट पश्चात् किसी भी अभ्यर्थी को परीक्षा कक्ष में प्रवेश करने की अनुमति नहीं दी जायेगी |
@@ -173,14 +159,14 @@ const AdmitCard = ({
     </tr>
 
     <tr>
-      <td style={{ width: "25px", verticalAlign: "top" }}>2.</td>
+      <td style={{ width: "5%", minWidth: "25px", verticalAlign: "top" }}>2.</td>
       <td>
         ओ. एम. आर. उत्तर पत्रक भरने के लिये काली/नीली स्याही के बॉल पॉइंट पेन का ही प्रयोग करें | पेन्सिल का प्रयोग वर्जित है |
       </td>
     </tr>
 
     <tr>
-      <td style={{ width: "25px", verticalAlign: "top" }}>3.</td>
+      <td style={{ width: "5%", minWidth: "25px", verticalAlign: "top" }}>3.</td>
       <td>
         अभ्यर्थी को परीक्षा हॉल/कक्ष के भीतर प्रवेश-पत्र, परिचय पत्र (आई.डी.) और काले/नीले बॉल प्वाइंट पेन के अतिरिक्त किसी भी प्रकार की पाठ्य सामग्री,
         मोबाइल, पेजर, कैलकुलेटर, डिजिटल घड़ी, इलेक्ट्रानिक उपकरण (गैजेट), मुद्रित/लिखित सामग्री, कागज के टुकड़े आदि को ले जाने की अनुमति नहीं है |
@@ -188,19 +174,19 @@ const AdmitCard = ({
     </tr>
 
     <tr>
-      <td style={{ width: "25px", verticalAlign: "top" }}>4.</td>
+      <td style={{ width: "5%", minWidth: "25px", verticalAlign: "top" }}>4.</td>
       <td>
         कोरोना वायरस <b>(COVID-19)</b> संक्रमण रोकथाम के दृष्टिगत परीक्षा केन्द्र पर दिये गये निर्देशों का अक्षरशः पालन करना अभ्यर्थी को अनिवार्य होगा |
       </td>
     </tr>
 
     <tr>
-      <td style={{ width: "25px", verticalAlign: "top" }}>5.</td>
+      <td style={{ width: "5%", minWidth: "25px", verticalAlign: "top" }}>5.</td>
       <td>परीक्षार्थी स्वच्छता एवं सफाई का विशेष ध्यान रखें |</td>
     </tr>
 
     <tr>
-      <td style={{ width: "25px", verticalAlign: "top" }}>6.</td>
+      <td style={{ width: "5%", minWidth: "25px", verticalAlign: "top" }}>6.</td>
       <td>
         परीक्षा कक्ष में किसी भी प्रकार का वार्तालाप, इशारे या व्यवधान को दुर्व्यवहार माना जायेगा |
         यदि कोई अभ्यर्थी अनुचित तरीकों का प्रयोग करता हुआ अथवा किसी अन्य के स्थान पर परीक्षा देता हुआ पाया गया
@@ -210,7 +196,7 @@ const AdmitCard = ({
     </tr>
 
     <tr>
-      <td style={{ width: "25px", verticalAlign: "top" }}>7.</td>
+      <td style={{ width: "5%", minWidth: "25px", verticalAlign: "top" }}>7.</td>
       <td>
         परीक्षा में अभ्यर्थी को उनके द्वारा ऑनलाइन आवेदन पत्र में अंकित तथ्यों के आधार पर सम्मिलित कराया जा रहा है
         तथा उनका अभ्यर्थन नितान्त औपबंधिक है |
@@ -220,7 +206,7 @@ const AdmitCard = ({
     </tr>
 
     <tr>
-      <td style={{ width: "25px", verticalAlign: "top" }}>8.</td>
+      <td style={{ width: "5%", minWidth: "25px", verticalAlign: "top" }}>8.</td>
       <td>
         यदि किसी अभ्यर्थी का प्रवेश पत्र बिना फोटो के है तो वह परीक्षा केंद्र पर अपने 2 नवीनतम पासपोर्ट
         साइज फोटो एवं ऑनलाइन आवेदन पत्र की फोटोप्रति एवं प्रवेश पत्र में अंकित फोटोयुक्त पहचान पत्र प्रस्तुत करेगा |
@@ -228,14 +214,14 @@ const AdmitCard = ({
     </tr>
 
     <tr>
-      <td style={{ width: "25px", verticalAlign: "top" }}>9.</td>
+      <td style={{ width: "5%", minWidth: "25px", verticalAlign: "top" }}>9.</td>
       <td>
         <b>प्रत्येक अभ्यर्थी को परीक्षा केंद्र पर अपने साथ अपनी पहचान हेतु प्रवेश-पत्र के साथ प्रवेश पत्र में अंकित फोटोयुक्त पहचान पत्र लाना अनिवार्य है |</b>
       </td>
     </tr>
 
     <tr>
-      <td style={{ width: "25px", verticalAlign: "top" }}>10.</td>
+      <td style={{ width: "5%", minWidth: "25px", verticalAlign: "top" }}>10.</td>
       <td>
         जिन अभ्यर्थियों को माननीय उच्च न्यायालय उत्तराखण्ड, नैनीताल के आदेशानुसार परीक्षा में सम्मिलित कराया जा रहा है,
         उनका परीक्षाफल माननीय उच्च न्यायालय उत्तराखण्ड नैनीताल के अंतिम निर्णय के अधीन रहेगा |
@@ -245,6 +231,7 @@ const AdmitCard = ({
     <tr>
       <td colSpan="2">
         <div
+          className="signature-div"
           style={{
             width: "200px",
             textAlign: "center",
@@ -253,7 +240,7 @@ const AdmitCard = ({
             float: "right",
           }}
         >
-          <img src="http://ukutet.com/images/Sign.jpg" width="100" alt="Final Signature" />
+          <img src="/Sign1.jpg" style={{ maxWidth: "100px", width: "100%", height: "auto" }} alt="Final Signature" />
           <br />
           सचिव<br />
           उत्तराखण्ड विद्यालयी शिक्षा परिषद्,<br />

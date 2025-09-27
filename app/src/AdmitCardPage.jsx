@@ -24,45 +24,73 @@ const AdmitCardPage = () => {
       });
   }, []);
 
+  
   const handleDownload = async () => {
     const element = componentRef.current;
 
+    // Clone the element to avoid affecting the page layout
+    const clone = element.cloneNode(true);
+    clone.style.width = '1000px';
+    clone.style.position = 'absolute';
+    clone.style.left = '-9999px';
+    clone.style.top = '-9999px';
+    document.body.appendChild(clone);
+
     // Convert to canvas
-    const canvas = await html2canvas(element, { scale: 2 });
+    const canvas = await html2canvas(clone, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
+
+    // Remove the clone
+    document.body.removeChild(clone);
 
     // Create PDF (A4 size)
     const pdf = new jsPDF("p", "mm", "a4");
-    const imgWidth = 210; // A4 width in mm
+    const pageWidth = 210; // A4 width in mm
     const pageHeight = 297; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    let heightLeft = imgHeight;
-    let position = 0;
+    // Calculate dimensions to fit in one page
+    const canvasAspect = canvas.width / canvas.height;
+    const pageAspect = pageWidth / pageHeight;
 
-    // First page
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    // Add extra pages if needed
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    let imgWidth, imgHeight;
+    if (canvasAspect > pageAspect) {
+      // Canvas is wider, fit to width
+      imgWidth = pageWidth;
+      imgHeight = pageWidth / canvasAspect;
+    } else {
+      // Canvas is taller, fit to height
+      imgHeight = pageHeight;
+      imgWidth = pageHeight * canvasAspect;
     }
+
+    // Center the image on the page
+    const x = (pageWidth - imgWidth) / 2;
+    const y = (pageHeight - imgHeight) / 2;
+
+    // Add image to single page
+    pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
 
     pdf.save("AdmitCard.pdf");
   };
 
   return (
     <div>
+
+      {/* Download PDF button */}
+      <div style={{ textAlign: "right", marginTop: "10px" }}>
+        <button
+          className="download-btn "
+          onClick={handleDownload}
+        >
+          📥 Download Admit Card PDF
+        </button>
+      </div>
       {/* Admit Card Preview */}
       <div ref={componentRef}>
         <AdmitCard
           qrcode={qrCodeUrl}
-          name="SNEHA RAUTELA"
-          fname="GOVIND SINGH"
+          name="Aditya Prasad"
+          fname="GOVIND PRASAD"
           gender="Male"
           categ="General"
           dob="05-03-2004"
@@ -82,23 +110,7 @@ const AdmitCardPage = () => {
         />
       </div>
 
-      {/* Download PDF button */}
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <button
-          onClick={handleDownload}
-          style={{
-            padding: "10px 20px",
-            fontSize: "18px",
-            background: "#28a745",
-            color: "#fff",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-          }}
-        >
-          📥 Download Admit Card PDF
-        </button>
-      </div>
+      
     </div>
   );
 };
