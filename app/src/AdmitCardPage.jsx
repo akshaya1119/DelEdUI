@@ -31,7 +31,7 @@ const AdmitCardPage = () => {
       setError(null);
       try {
         const response = await fetch(
-          `https://localhost:7091/api/Registrations/get-registration-details/${registrationNo}`
+          `${import.meta.env.VITE_API_URL}/api/Registrations/get-registration-details/${registrationNo}`
         );
         const data = await response.json();
 
@@ -111,7 +111,7 @@ const AdmitCardPage = () => {
 
       for (const regNo of next10RegNos) {
         const res = await fetch(
-          `https://localhost:7091/api/Registrations/get-registration-details/${regNo}`
+          `${import.meta.env.VITE_API_URL}/api/Registrations/get-registration-details/${regNo}`
         );
         const data = await res.json();
         if (!res.ok) continue;
