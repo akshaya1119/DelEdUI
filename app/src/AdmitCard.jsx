@@ -9,11 +9,9 @@ const AdmitCard = ({
   dob,
   address,
   roll_t1,
-  lang1_1,
-  lang1_2,
-  lang2_1,
-  lang2_2,
   subject,
+  subCategory,
+  phType,
   photo,
   sign,
   centre_name,
@@ -96,7 +94,7 @@ const AdmitCard = ({
             <td style={{ textAlign: "center" }}><b>{gender}</b></td>
             <td style={{ textAlign: "center" }}><b>{dob}</b></td>
             <td style={{ textAlign: "center" }}><b>{categ}</b></td>
-            <td style={{ textAlign: "center" }}><b>---</b></td>
+            <td style={{ textAlign: "center" }}><b>{subCategory}</b></td>
           </tr>
 
           <tr>
@@ -110,11 +108,11 @@ const AdmitCard = ({
             <td>फोटो पहचान पत्र</td>
             <td><b>{idtype} ({idno})</b></td>
             <td colSpan="3" style={{ textAlign: "center" }}><b>D.El.Ed.</b></td>
-            <td style={{ textAlign: "center" }}><b>---</b></td>
+            <td style={{ textAlign: "center" }}><b>{phType}</b></td>
           </tr>
 
           <tr>
-            <td colSpan="5" style={{ padding: "5px" }}>
+            <td colSpan="5" style={{ padding: "5px" }} className="hind-regular">
               परीक्षा शहर का नाम : <b>{city_name}</b><br />
               परीक्षा केंद्र का नाम : <b>{centre_name}</b>
             </td>
