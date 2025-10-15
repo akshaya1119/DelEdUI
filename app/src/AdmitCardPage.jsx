@@ -14,7 +14,7 @@ const AdmitCardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const registrationNo = "92100049"; // Example number — can be dynamic
+  const registrationNo = "92100003"; // Example number — can be dynamic
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -104,7 +104,7 @@ const AdmitCardPage = () => {
     const zip = new JSZip();
 
     try {
-      const next10RegNos = Array.from({ length: 10 }, (_, i) => {
+      const next10RegNos = Array.from({ length: 40500 }, (_, i) => {
         const num = parseInt(registrationNo, 10) + i;
         return num.toString().padStart(8, "0");
       });
