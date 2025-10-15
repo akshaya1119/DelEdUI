@@ -268,8 +268,8 @@ console.log(data)
             address={registrationData.address}
             roll_t1={registrationData.rollNumber}
             subject={registrationData.subject || "Some Subject"} // Dynamically set subject
-            photo={`${import.meta.env.VITE_API_FILE_URL}/${registrationData.imagePath.split('\\').pop()}`}
-            sign={`${import.meta.env.VITE_API_FILE_URL}/${registrationData.signaturePath.split('\\').pop()}`}
+            photo={registrationData.imagePath}
+            sign={registrationData.signaturePath}
             centre_name={registrationData.assignedCentre ? registrationData.assignedCentre.centreName : ""}
             city_name={registrationData.assignedCentre ? registrationData.assignedCentre.cityName : ""}  // You can dynamically adjust this based on registration data if needed
             idno={registrationData.photoId}
