@@ -197,7 +197,7 @@ const AdmitCardPage = () => {
   // };
 
   const handleDownloadMultiple = async () => {
-  const batchSize = 800; // number of PDFs per ZIP
+  const batchSize = 5; // number of PDFs per ZIP
   const totalCards = 40500; // total cards you want to generate
   const baseRegNo = parseInt(registrationNo, 10);
 

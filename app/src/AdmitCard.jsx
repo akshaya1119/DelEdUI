@@ -20,6 +20,7 @@ const AdmitCard = ({
   idno,
 }) => {
   return (
+    
     <div className="hindi admit-card">
       {/* Header */}
       <table className="header-table" style={{ width: "100%", marginBottom: "5px" }}>
