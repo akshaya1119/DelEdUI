@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, use } from "react";
 import { createRoot } from "react-dom/client";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -13,6 +13,12 @@ const AdmitCardPage = () => {
   const [registrationData, setRegistrationData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+
+  const[batchStart,setBatchStart] = useState(0);
+const batchSize = 1000;
+const currentStartRef = useRef(0);
+const [isDownloading, setIsDownloading] = useState(false);
 
   const registrationNo = "92100003"; // Example number — can be dynamic
 
@@ -64,6 +70,115 @@ const AdmitCardPage = () => {
     fetchRegistrationDetails();
   }, [registrationNo]);
 
+  const downloadBatch = async () => {
+    if (isDownloading) return;
+    setIsDownloading(true);
+
+    let start = currentStartRef.current; // ✅ use ref
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/Registrations/get-registration-batch?start=${start}&size=${batchSize}`
+      );
+      const registrations = await res.json();
+
+      if (!res.ok || registrations.length === 0) {
+        console.log("No more registrations to download.");
+        setIsDownloading(false);
+        return;
+      }
+
+      const zip = new JSZip();
+
+      for (const data of registrations) {
+        const qrData = {
+          id: data.rollNumber,
+          name: data.name,
+          serial: data.rollNumber.toString(),
+          barcode: data.rollNumber.toString(),
+        };
+        const qrUrl = await QRCode.generate(qrData);
+
+        const tempDiv = document.createElement("div");
+        tempDiv.style.width = "1000px";
+        tempDiv.style.position = "absolute";
+        tempDiv.style.left = "-9999px";
+        tempDiv.style.top = "-9999px";
+        document.body.appendChild(tempDiv);
+
+        const admitCard = (
+          <AdmitCard
+          qrcode={qrUrl}
+          name={data.name}
+          fname={data.fName}
+          gender={data.gender}
+          categ={data.category}
+          subCategory={data.subCategory || "----"}
+          phType={data.phType || "----"}
+          dob={formatDate(data.dob)}
+          address={data.address}
+          roll_t1={data.rollNumber}
+          subject={data.subject || "Some Subject"}
+          photo={data.imagePath}
+          sign={data.signaturePath}
+          centre_name={
+            data.assignedCentre ? data.assignedCentre.centreName : ""
+          }
+          city_name={data.assignedCentre ? data.assignedCentre.cityName : ""}
+          idno={data.photoId}
+        />
+        );
+
+        const root = createRoot(tempDiv);
+        await new Promise((resolve) => {
+          root.render(admitCard);
+          setTimeout(resolve, 400);
+        });
+
+        const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 2 });
+        document.body.removeChild(tempDiv);
+
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const canvasAspect = canvas.width / canvas.height;
+        const pageAspect = pageWidth / pageHeight;
+
+        let imgWidth, imgHeight;
+        if (canvasAspect > pageAspect) {
+          imgWidth = pageWidth;
+          imgHeight = pageWidth / canvasAspect;
+        } else {
+          imgHeight = pageHeight;
+          imgWidth = pageHeight * canvasAspect;
+        }
+
+        const x = (pageWidth - imgWidth) / 2;
+        const y = (pageHeight - imgHeight) / 2;
+        pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
+
+        zip.file(`${data.rollNumber}.pdf`, pdf.output("blob"));
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, `AdmitCards_${start + 1}-${start + registrations.length}.zip`);
+
+      // update ref for next batch
+      currentStartRef.current = start + registrations.length;
+
+      // auto download next batch
+      if (registrations.length === batchSize) {
+        setTimeout(downloadBatch, 500); // next batch
+      }
+    } catch (err) {
+      console.error("Error downloading batch:", err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+
   // ✅ Download single admit card PDF
   const handleDownloadSingle = async (regNo) => {
     const element = componentRef.current;
@@ -99,105 +214,8 @@ const AdmitCardPage = () => {
     pdf.save("AdmitCard.pdf");
   };
 
-  // ✅ Download next 10 admit cards as ZIP — same layout logic as single
-  // const handleDownloadMultiple = async () => {
-  //   const zip = new JSZip();
-
-  //   try {
-  //     const next10RegNos = Array.from({ length: 40500 }, (_, i) => {
-  //       const num = parseInt(registrationNo, 10) + i;
-  //       return num.toString().padStart(8, "0");
-  //     });
-
-  //     for (const regNo of next10RegNos) {
-  //       const res = await fetch(
-  //         `${import.meta.env.VITE_API_URL}/api/Registrations/get-registration-details/${regNo}`
-  //       );
-  //       const data = await res.json();
-  //       if (!res.ok) continue;
-
-  //       const qrData = {
-  //         id: data.rollNumber,
-  //         name: data.name,
-  //         serial: data.rollNumber.toString(),
-  //         barcode: data.rollNumber.toString(),
-  //       };
-  //       const qrUrl = await QRCode.generate(qrData);
-
-  //       // Create a temporary div for rendering AdmitCard
-  //       const tempDiv = document.createElement("div");
-  //       tempDiv.style.width = "1000px";
-  //       tempDiv.style.position = "absolute";
-  //       tempDiv.style.left = "-9999px";
-  //       tempDiv.style.top = "-9999px";
-  //       document.body.appendChild(tempDiv);
-
-  //       const admitCard = (
-  //         <AdmitCard
-  //           qrcode={qrUrl}
-  //           name={data.name}
-  //           fname={data.fName}
-  //           gender={data.gender}
-  //           categ={data.category}
-  //           subCategory={data.subCategory || "----"}
-  //           phType={data.phType || "----"}
-  //           dob={formatDate(data.dob)}
-  //           address={data.address}
-  //           roll_t1={data.rollNumber}
-  //           subject={data.subject || "Some Subject"}
-  //           photo={data.imagePath}
-  //           sign={data.signaturePath}
-  //           centre_name={
-  //             data.assignedCentre ? data.assignedCentre.centreName : ""
-  //           }
-  //           city_name={data.assignedCentre ? data.assignedCentre.cityName : ""}
-  //           idno={data.photoId}
-  //         />
-  //       );
-
-  //       // React 18 render
-  //       const root = createRoot(tempDiv);
-  //       await new Promise((resolve) => {
-  //         root.render(admitCard);
-  //         setTimeout(resolve, 500); // Wait for render
-  //       });
-
-  //       const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 2 });
-  //       const imgData = canvas.toDataURL("image/png");
-  //       document.body.removeChild(tempDiv);
-
-  //       const pdf = new jsPDF("p", "mm", "a4");
-  //       const pageWidth = 210;
-  //       const pageHeight = 297;
-  //       const canvasAspect = canvas.width / canvas.height;
-  //       const pageAspect = pageWidth / pageHeight;
-
-  //       let imgWidth, imgHeight;
-  //       if (canvasAspect > pageAspect) {
-  //         imgWidth = pageWidth;
-  //         imgHeight = pageWidth / canvasAspect;
-  //       } else {
-  //         imgHeight = pageHeight;
-  //         imgWidth = pageHeight * canvasAspect;
-  //       }
-
-  //       const x = (pageWidth - imgWidth) / 2;
-  //       const y = (pageHeight - imgHeight) / 2;
-  //       pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
-
-  //       const pdfBlob = pdf.output("blob");
-  //       zip.file(`${regNo}.pdf`, pdfBlob);
-  //     }
-
-  //     const zipBlob = await zip.generateAsync({ type: "blob" });
-  //     saveAs(zipBlob, "AdmitCards.zip");
-  //   } catch (err) {
-  //     console.error("Error generating ZIP:", err);
-  //   }
-  // };
-
   const handleDownloadMultiple = async () => {
-  const batchSize = 800; // number of PDFs per ZIP
+  const batchSize = 4; // number of PDFs per ZIP
   const totalCards = 40500; // total cards you want to generate
   const baseRegNo = parseInt(registrationNo, 10);
 
@@ -339,6 +357,10 @@ const AdmitCardPage = () => {
         >
           📦 Download Next 10 Admit Cards ZIP
         </button>
+
+        <button onClick={downloadBatch} disabled={isDownloading}>
+        📦 Download Admit Cards (Batch of {batchSize})
+      </button>
       </div>
 
       <div ref={componentRef}>
