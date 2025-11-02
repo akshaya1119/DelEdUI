@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, use } from "react";
 import { createRoot } from "react-dom/client";
+import { Link } from "react-router-dom";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import JSZip from "jszip";
@@ -16,11 +17,11 @@ const AdmitCardPage = () => {
 
 
   const[batchStart,setBatchStart] = useState(0);
-const batchSize = 1000;
+const batchSize = 700;
 const currentStartRef = useRef(0);
 const [isDownloading, setIsDownloading] = useState(false);
 
-  const registrationNo = "92100003"; // Example number — can be dynamic
+  const registrationNo = "2500001"; // Example number — can be dynamic
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -70,34 +71,145 @@ const [isDownloading, setIsDownloading] = useState(false);
     fetchRegistrationDetails();
   }, [registrationNo]);
 
-  const downloadBatch = async () => {
-    if (isDownloading) return;
-    setIsDownloading(true);
+  // const downloadBatch = async () => {
+  //   if (isDownloading) return;
+  //   setIsDownloading(true);
 
-    let start = currentStartRef.current; // ✅ use ref
+  //   let start = currentStartRef.current; // ✅ use ref
 
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/Registrations/get-registration-batch?start=${start}&size=${batchSize}`
-      );
-      const registrations = await res.json();
+  //   try {
+  //     const res = await fetch(
+  //       `${import.meta.env.VITE_API_URL}/api/Registrations/get-registration-batch?start=${start}&size=${batchSize}`
+  //     );
+  //     const registrations = await res.json();
 
-      if (!res.ok || registrations.length === 0) {
-        console.log("No more registrations to download.");
-        setIsDownloading(false);
-        return;
-      }
+  //     if (!res.ok || registrations.length === 0) {
+  //       console.log("No more registrations to download.");
+  //       setIsDownloading(false);
+  //       return;
+  //     }
 
-      const zip = new JSZip();
+  //     const zip = new JSZip();
 
-      for (const data of registrations) {
-        const qrData = {
-          id: data.rollNumber,
-          name: data.name,
-          serial: data.rollNumber.toString(),
-          barcode: data.rollNumber.toString(),
-        };
-        const qrUrl = await QRCode.generate(qrData);
+  //     for (const data of registrations) {
+  //       const qrData = {
+  //         id: data.rollNumber,
+  //         name: data.name,
+  //         serial: data.rollNumber.toString(),
+  //         barcode: data.rollNumber.toString(),
+  //       };
+  //       const qrUrl = await QRCode.generate(qrData);
+
+  //       const tempDiv = document.createElement("div");
+  //       tempDiv.style.width = "1000px";
+  //       tempDiv.style.position = "absolute";
+  //       tempDiv.style.left = "-9999px";
+  //       tempDiv.style.top = "-9999px";
+  //       document.body.appendChild(tempDiv);
+
+  //       const admitCard = (
+  //         <AdmitCard
+  //         qrcode={qrUrl}
+  //         name={data.name}
+  //         fname={data.fName}
+  //         gender={data.gender}
+  //         categ={data.category}
+  //         subCategory={data.subCategory || "----"}
+  //         phType={data.phType || "----"}
+  //         dob={formatDate(data.dob)}
+  //         address={data.address}
+  //         roll_t1={data.rollNumber}
+  //         subject={data.subject || "Some Subject"}
+  //         photo={data.imagePath}
+  //         sign={data.signaturePath}
+  //         centre_name={
+  //           data.assignedCentre ? data.assignedCentre.centreName : ""
+  //         }
+  //         city_name={data.assignedCentre ? data.assignedCentre.cityName : ""}
+  //         idno={data.photoId}
+  //       />
+  //       );
+
+  //       const root = createRoot(tempDiv);
+  //       await new Promise((resolve) => {
+  //         root.render(admitCard);
+  //         setTimeout(resolve, 400);
+  //       });
+
+  //       const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 2 });
+  //       document.body.removeChild(tempDiv);
+
+  //       const imgData = canvas.toDataURL("image/png");
+  //       const pdf = new jsPDF("p", "mm", "a4");
+  //       const pageWidth = 210;
+  //       const pageHeight = 297;
+  //       const canvasAspect = canvas.width / canvas.height;
+  //       const pageAspect = pageWidth / pageHeight;
+
+  //       let imgWidth, imgHeight;
+  //       if (canvasAspect > pageAspect) {
+  //         imgWidth = pageWidth;
+  //         imgHeight = pageWidth / canvasAspect;
+  //       } else {
+  //         imgHeight = pageHeight;
+  //         imgWidth = pageHeight * canvasAspect;
+  //       }
+
+  //       const x = (pageWidth - imgWidth) / 2;
+  //       const y = (pageHeight - imgHeight) / 2;
+  //       pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
+
+  //       zip.file(`${data.rollNumber}.pdf`, pdf.output("blob"));
+  //     }
+
+  //     const zipBlob = await zip.generateAsync({ type: "blob" });
+  //     saveAs(zipBlob, `AdmitCards_${start + 1}-${start + registrations.length}.zip`);
+
+  //     // update ref for next batch
+  //     currentStartRef.current = start + registrations.length;
+
+  //     // auto download next batch
+  //     if (registrations.length === batchSize) {
+  //       setTimeout(downloadBatch, 500); // next batch
+  //     }
+  //   } catch (err) {
+  //     console.error("Error downloading batch:", err);
+  //   } finally {
+  //     setIsDownloading(false);
+  //   }
+  // };
+
+
+  // ✅ Download single admit card PDF
+  
+ const downloadBatch = async () => {
+  if (isDownloading) return;
+  setIsDownloading(true);
+
+  let start = currentStartRef.current;
+
+  try {
+    const res = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/Registrations/get-registration-batch?start=${start}&size=${batchSize}`
+    );
+    const registrations = await res.json();
+
+    if (!res.ok || registrations.length === 0) {
+      console.log("No more registrations to download.");
+      setIsDownloading(false);
+      return;
+    }
+
+    const zip = new JSZip();
+
+    for (const reg of registrations) {
+      try {
+        const qrUrl = await QRCode.generate({
+          id: reg.rollNumber,
+          name: reg.name,
+          serial: reg.rollNumber.toString(),
+          barcode: reg.rollNumber.toString(),
+        });
 
         const tempDiv = document.createElement("div");
         tempDiv.style.width = "1000px";
@@ -108,25 +220,23 @@ const [isDownloading, setIsDownloading] = useState(false);
 
         const admitCard = (
           <AdmitCard
-          qrcode={qrUrl}
-          name={data.name}
-          fname={data.fName}
-          gender={data.gender}
-          categ={data.category}
-          subCategory={data.subCategory || "----"}
-          phType={data.phType || "----"}
-          dob={formatDate(data.dob)}
-          address={data.address}
-          roll_t1={data.rollNumber}
-          subject={data.subject || "Some Subject"}
-          photo={data.imagePath}
-          sign={data.signaturePath}
-          centre_name={
-            data.assignedCentre ? data.assignedCentre.centreName : ""
-          }
-          city_name={data.assignedCentre ? data.assignedCentre.cityName : ""}
-          idno={data.photoId}
-        />
+            qrcode={qrUrl}
+            name={reg.name}
+            fname={reg.fName}
+            gender={reg.gender}
+            categ={reg.category}
+            subCategory={reg.subCategory || "----"}
+            phType={reg.phType || "----"}
+            dob={formatDate(reg.dob)}
+            address={reg.address}
+            roll_t1={reg.rollNumber}
+            subject={reg.subject || "Some Subject"}
+            photo={reg.imagePath}      // already Base64
+            sign={reg.signaturePath}   // already Base64
+            centre_name={reg.assignedCentre?.centreName || ""}
+            city_name={reg.assignedCentre?.cityName || ""}
+            idno={reg.photoId}
+          />
         );
 
         const root = createRoot(tempDiv);
@@ -138,7 +248,6 @@ const [isDownloading, setIsDownloading] = useState(false);
         const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 2 });
         document.body.removeChild(tempDiv);
 
-        const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF("p", "mm", "a4");
         const pageWidth = 210;
         const pageHeight = 297;
@@ -156,30 +265,30 @@ const [isDownloading, setIsDownloading] = useState(false);
 
         const x = (pageWidth - imgWidth) / 2;
         const y = (pageHeight - imgHeight) / 2;
-        pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
+        pdf.addImage(canvas.toDataURL("image/png"), "PNG", x, y, imgWidth, imgHeight);
 
-        zip.file(`${data.rollNumber}.pdf`, pdf.output("blob"));
+        zip.file(`${reg.rollNumber}.pdf`, pdf.output("blob"));
+      } catch (innerErr) {
+        console.error(`Failed to generate PDF for ${reg.rollNumber}:`, innerErr);
       }
-
-      const zipBlob = await zip.generateAsync({ type: "blob" });
-      saveAs(zipBlob, `AdmitCards_${start + 1}-${start + registrations.length}.zip`);
-
-      // update ref for next batch
-      currentStartRef.current = start + registrations.length;
-
-      // auto download next batch
-      if (registrations.length === batchSize) {
-        setTimeout(downloadBatch, 500); // next batch
-      }
-    } catch (err) {
-      console.error("Error downloading batch:", err);
-    } finally {
-      setIsDownloading(false);
     }
-  };
+
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    saveAs(zipBlob, `AdmitCards_${start + 1}-${start + registrations.length}.zip`);
+
+    currentStartRef.current = start + registrations.length;
+
+    if (registrations.length === batchSize) setTimeout(downloadBatch, 500);
+  } catch (err) {
+    console.error("Error downloading batch:", err);
+  } finally {
+    setIsDownloading(false);
+  }
+};
 
 
-  // ✅ Download single admit card PDF
+  
+  
   const handleDownloadSingle = async (regNo) => {
     const element = componentRef.current;
     const clone = element.cloneNode(true);
@@ -346,6 +455,46 @@ const [isDownloading, setIsDownloading] = useState(false);
 
   return (
     <div>
+      <nav style={{
+        backgroundColor: "#0A4988",
+        padding: "10px",
+        marginBottom: "20px",
+        borderRadius: "4px"
+      }}>
+        <Link
+          to="/"
+          style={{
+            color: "#FFFDD0",
+            textDecoration: "none",
+            fontWeight: "bold",
+            marginRight: "20px",
+            padding: "8px 16px",
+            borderRadius: "4px",
+            backgroundColor: "#0070A9",
+            transition: "background-color 0.3s ease"
+          }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = "#0089BB"}
+          onMouseLeave={(e) => e.target.style.backgroundColor = "#0070A9"}
+        >
+          Admit Card
+        </Link>
+        <Link
+          to="/seat-matrix"
+          style={{
+            color: "#FFFDD0",
+            textDecoration: "none",
+            fontWeight: "bold",
+            padding: "8px 16px",
+            borderRadius: "4px",
+            backgroundColor: "#0070A9",
+            transition: "background-color 0.3s ease"
+          }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = "#0089BB"}
+          onMouseLeave={(e) => e.target.style.backgroundColor = "#0070A9"}
+        >
+          Seat Matrix
+        </Link>
+      </nav>
       <div style={{ textAlign: "right", marginTop: "10px" }}>
         <button className="download-btn" onClick={() => handleDownloadSingle(registrationData.regNo)}>
           📥 Download Admit Card PDF
