@@ -14,6 +14,12 @@ const SeatMatrix = () => {
   const [matrixOrientation, setMatrixOrientation] = useState("4x6"); // "4x6" or "6x4"
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [cities, setCities] = useState([]);
+  const [centres, setCentres] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [selectedCentre, setSelectedCentre] = useState(null);
+  const [citiesLoading, setCitiesLoading] = useState(false);
+  const [centresLoading, setCentresLoading] = useState(false);
 
   useEffect(() => {
     if (cityCode && centerCode && selectedRoom) {
@@ -32,13 +38,32 @@ const SeatMatrix = () => {
     }
   }, [matrixOrientation]);
 
+  useEffect(() => {
+    fetchCities();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCity) {
+      fetchCentres(selectedCity.cityCode);
+    } else {
+      setCentres([]);
+      setSelectedCentre(null);
+      setCenterCode("");
+    }
+    setSelectedRoom(null); // Reset room selection when city changes
+  }, [selectedCity]);
+
+  useEffect(() => {
+    setSelectedRoom(null); // Reset room selection when centre changes
+  }, [selectedCentre]);
+
   const fetchSeatData = async () => {
     setLoading(true);
     setError(null);
     setAnimateGrid(false);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/Centres/by-room?cityCode=${cityCode}&centerCode=${centerCode}&roomNumber=${selectedRoom}`
+        `${import.meta.env.VITE_API_URL_SEATMATRIX}/api/Centres/by-room?cityCode=${cityCode}&centerCode=${centerCode}&roomNumber=${selectedRoom}`
       );
       const data = await response.json();
 
@@ -52,6 +77,40 @@ const SeatMatrix = () => {
       setError("Error fetching data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCities = async () => {
+    setCitiesLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL_SEATMATRIX}/api/Centres/get-cities?session=2025-26`);
+      const data = await response.json();
+      if (response.ok) {
+        setCities(data);
+      } else {
+        setError("Failed to fetch cities");
+      }
+    } catch (err) {
+      setError("Error fetching cities");
+    } finally {
+      setCitiesLoading(false);
+    }
+  };
+
+  const fetchCentres = async (cityCode) => {
+    setCentresLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL_SEATMATRIX}/api/Centres?citycode=${cityCode}&session=2025-26`);
+      const data = await response.json();
+      if (response.ok) {
+        setCentres(data);
+      } else {
+        setError("Failed to fetch centres");
+      }
+    } catch (err) {
+      setError("Error fetching centres");
+    } finally {
+      setCentresLoading(false);
     }
   };
 
@@ -85,6 +144,7 @@ const SeatMatrix = () => {
     const is4x6 = matrixOrientation === "4x6";
     const rows = is4x6 ? 4 : 6;
     const cols = is4x6 ? 6 : 4;
+    const seatSize = 'clamp(80px, 12vw, 130px)';
     const seats = [];
 
     for (let row = 1; row <= rows; row++) {
@@ -93,879 +153,406 @@ const SeatMatrix = () => {
         const originalRow = is4x6 ? row : col;
         const originalCol = is4x6 ? col : row;
         const name = getSeatName(originalRow, originalCol);
+        const seat = getSeatData(originalRow, originalCol);
 
         seats.push(
           <div
             key={`${row}-${col}`}
-            className="seat"
+            className={`p-2 text-center rounded-lg transition-all duration-300 ease-in-out flex flex-col items-center justify-center w-full h-full break-words overflow-hidden relative ${
+              name
+                ? 'border-2 border-blue-600 bg-blue-600 text-white font-semibold cursor-pointer shadow-md hover:scale-110 hover:-translate-y-0.5 hover:shadow-lg hover:border-blue-700 hover:bg-blue-700'
+                : 'border-2 border-slate-300 bg-white text-slate-600 font-medium cursor-default shadow-sm hover:bg-slate-50 hover:border-blue-400'
+            }`}
             style={{
-              border: `2px solid #${name ? '0070A9' : '0A4988'}`,
-              padding: "6px",
-              backgroundColor: name ? "#0089BB" : "#FFF",
-              color: name ? "#FFFDD0" : "#0A4988",
-              fontSize: "clamp(10px, 2.5vw, 14px)",
-              textAlign: "center",
-              fontWeight: name ? "600" : "500",
-              borderRadius: "8px",
-              transition: "all 0.3s ease-in-out",
+              fontSize: "clamp(10px, 2vw, 14px)",
               transform: animateGrid ? "scale(1)" : "scale(0.8)",
-              opacity: animateGrid ? 1 : 0,
-              cursor: name ? "pointer" : "default",
-              boxShadow: name ? "0 3px 6px rgba(0,0,0,0.15)" : "0 1px 3px rgba(0,0,0,0.1)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              aspectRatio: "1",
-              width: "100%",
-              height: "100%",
-              wordWrap: "break-word",
-              overflow: "hidden",
-              position: "relative"
+              opacity: animateGrid ? 1 : 0
             }}
             onClick={() => handleSeatClick(originalRow, originalCol)}
-            onMouseEnter={(e) => {
-              if (name) {
-                e.target.style.transform = "scale(1.08) translateY(-2px)";
-                e.target.style.boxShadow = "0 6px 12px rgba(0,0,0,0.25)";
-                e.target.style.borderColor = "#005A87";
-              } else {
-                e.target.style.backgroundColor = "#F8F9FA";
-                e.target.style.borderColor = "#0070A9";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (name) {
-                e.target.style.transform = "scale(1)";
-                e.target.style.boxShadow = "0 3px 6px rgba(0,0,0,0.15)";
-                e.target.style.borderColor = "#0070A9";
-              } else {
-                e.target.style.backgroundColor = "#FFF";
-                e.target.style.borderColor = "#0A4988";
-              }
-            }}
           >
-            <div style={{
-              fontSize: "clamp(8px, 1.5vw, 10px)",
-              opacity: 0.8,
-              marginBottom: "2px",
-              fontWeight: "400"
-            }}>
-              {originalRow}-{originalCol}
+            <div className="text-[clamp(9px,1.5vw,12px)] leading-[1.2] max-w-full overflow-hidden text-ellipsis">
+              {seat?.roll_no }
             </div>
-            <div style={{
-              fontSize: "clamp(9px, 2vw, 12px)",
-              lineHeight: "1.2",
-              maxWidth: "100%",
-              overflow: "hidden",
-              textOverflow: "ellipsis"
-            }}>
+            <div className="text-[clamp(9px,1.5vw,12px)] leading-[1.2] max-w-full overflow-hidden text-ellipsis">
               {name || "Empty"}
             </div>
+           
           </div>
         );
       }
     }
 
+    const gap = 16; // gap-4 is 16px
+    const totalWidth = `calc(${cols} * ${seatSize} + ${(cols - 1)} * ${gap}px)`;
+    const totalHeight = `calc(${rows} * ${seatSize} + ${(rows - 1)} * ${gap}px)`;
+
     return (
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${cols}, 1fr)`,
-        gridTemplateRows: `repeat(${rows}, 1fr)`,
-        gap: "20px",
-        width: "100%",
-        maxWidth: "min(90vw, 90vh)",
-        aspectRatio: is4x6 ? "6/4" : "4/6",
-        margin: "0 auto",
-        transition: "all 0.3s ease-in-out",
-        transform: animateGrid ? "translateY(0)" : "translateY(20px)",
-        opacity: animateGrid ? 1 : 0
-      }}>
-        {seats}
+      <div className="overflow-x-auto">
+        <div
+          className="grid gap-4 mx-auto transition-all duration-300 ease-in-out"
+          style={{
+            gridTemplateColumns: `repeat(${cols}, ${seatSize})`,
+            gridTemplateRows: `repeat(${rows}, ${seatSize})`,
+            width: totalWidth,
+            height: totalHeight,
+            transform: animateGrid ? "translateY(0)" : "translateY(20px)",
+            opacity: animateGrid ? 1 : 0,
+            minWidth: 'fit-content'
+          }}
+        >
+          {seats}
+        </div>
       </div>
     );
   };
 
   return (
-    <div style={{
-      padding: "clamp(8px, 3vw, 16px)",
-      backgroundColor: "#FFFDD0",
-      minHeight: "100vh",
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      width: "100%",
-      boxSizing: "border-box",
-      overflowY: "auto",
-      lineHeight: "1.5"
-    }}>
-      {/* <nav style={{
-        backgroundColor: "#0A4988",
-        padding: "clamp(10px, 3vw, 16px)",
-        marginBottom: "clamp(12px, 4vw, 20px)",
-        borderRadius: "clamp(6px, 2vw, 10px)",
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "clamp(8px, 3vw, 16px)",
-        justifyContent: "center",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-      }}>
-        <Link
-          to="/"
-          style={{
-            color: "#FFFDD0",
-            textDecoration: "none",
-            fontWeight: "600",
-            padding: "clamp(8px, 2vw, 12px) clamp(16px, 4vw, 24px)",
-            borderRadius: "clamp(4px, 1vw, 8px)",
-            backgroundColor: "#0070A9",
-            transition: "all 0.3s ease",
-            fontSize: "clamp(12px, 3vw, 16px)",
-            border: "2px solid transparent",
-            minHeight: "44px",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px"
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = "#0089BB";
-            e.target.style.transform = "translateY(-1px)";
-            e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = "#0070A9";
-            e.target.style.transform = "translateY(0)";
-            e.target.style.boxShadow = "none";
-          }}
-        >
-          📄 Admit Card
-        </Link>
-        <Link
-          to="/seat-matrix"
-          style={{
-            color: "#FFFDD0",
-            textDecoration: "none",
-            fontWeight: "600",
-            padding: "clamp(8px, 2vw, 12px) clamp(16px, 4vw, 24px)",
-            borderRadius: "clamp(4px, 1vw, 8px)",
-            backgroundColor: "#0089BB",
-            transition: "all 0.3s ease",
-            fontSize: "clamp(12px, 3vw, 16px)",
-            border: "2px solid #FFFDD0",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            minHeight: "44px",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px"
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = "translateY(-1px)";
-            e.target.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = "translateY(0)";
-            e.target.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-          }}
-        >
-          🪑 Seat Matrix
-        </Link>
-      </nav> */}
-      <div style={{
-        textAlign: "center",
-        marginBottom: "32px",
-        padding: "20px",
-        backgroundColor: "#FFFDE7",
-        borderRadius: "12px",
-        border: "2px solid #0070A9",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-      }}>
-        <h1 style={{
-          color: "#0A4988",
-          fontSize: "clamp(2em, 6vw, 2.5em)",
-          fontWeight: "700",
-          margin: "0 0 8px 0",
-          textShadow: "1px 1px 3px rgba(0,0,0,0.1)",
-          letterSpacing: "-0.5px"
-        }}>
-          🎓 Seat Matrix System
-        </h1>
-        <p style={{
-          color: "#666",
-          fontSize: "clamp(14px, 3vw, 18px)",
-          margin: 0,
-          fontWeight: "400",
-          lineHeight: "1.4"
-        }}>
-          Find seat and view candidate information
-        </p>
-      </div>
-
-      {/* Location Selection and Room Selector Row */}
-      <div style={{
-        marginBottom: "24px",
-        display: "flex",
-        gap: "24px",
-        //maxWidth: "900px",
-        width: "100%",
-        marginLeft: "auto",
-        marginRight: "auto",
-        flexWrap: "wrap",
-        alignItems: "stretch"
-      }}>
-        {/* Location Selection Column */}
-        <div style={{
-          flex: "1",
-          minWidth: "300px",
-          backgroundColor: "#FFFDE7",
-          padding: "24px",
-          borderRadius: "12px",
-          border: "2px solid #0070A9",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          display: "flex",
-          flexDirection: "column",
-          height: "fit-content"
-        }}>
-          <div style={{
-            textAlign: "center",
-            marginBottom: "16px"
-          }}>
-            <h3 style={{
-              color: "#0A4988",
-              fontSize: "18px",
-              fontWeight: "600",
-              margin: "0 0 4px 0"
-            }}>
-              📍 Select Your Location
-            </h3>
-            <p style={{
-              color: "#666",
-              fontSize: "14px",
-              margin: 0,
-              fontWeight: "400"
-            }}>
-              Enter your city and center codes
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 font-['Segoe_UI',Tahoma,Geneva,Verdana,sans-serif] overflow-hidden">
+      {/* Modern Navigation Header */}
+      <nav className="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-xl border-b border-blue-300/20">
+        <div className="px-6">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <div className="flex-shrink-0">
+                <h1 className="text-white text-xl font-bold tracking-tight">🎓 SeatMatrix</h1>
+              </div>
+            </div>
+            {/* <div className="flex items-center space-x-2">
+              <Link
+                to="/"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-100 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg backdrop-blur-sm border border-white/20"
+              >
+                📄 Admit Card
+              </Link>
+              <Link
+                to="/seat-matrix"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-lg"
+              >
+                🪑 Seat Matrix
+              </Link>
+            </div> */}
           </div>
+        </div>
+      </nav>
 
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "16px",
-            flex: "1"
-          }}>
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center"
-            }}>
-              <label style={{
-                color: "#0A4988",
-                fontWeight: "600",
-                marginBottom: "8px",
-                fontSize: "15px",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px"
-              }}>
-                🏙️ City Code
-              </label>
-              <input
-                type="number"
-                value={cityCode}
-                onChange={(e) => setCityCode(e.target.value)}
-                placeholder="e.g., 101"
-                min="1"
-                style={{
-                  padding: "12px 16px",
-                  border: "2px solid #0089BB",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  width: "100%",
-                  transition: "all 0.3s ease",
-                  textAlign: "center",
-                  fontWeight: "500",
-                  backgroundColor: "#FFF"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#0070A9";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(0,112,169,0.1)";
-                  e.target.style.transform = "scale(1.02)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#0089BB";
-                  e.target.style.boxShadow = "none";
-                  e.target.style.transform = "scale(1)";
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '.') {
-                    e.preventDefault();
-                  }
-                }}
-              />
+      {/* Main Content */}
+      <div className="px-6 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-6 shadow-lg">
+            <span className="text-3xl">🎓</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
+            Seat Matrix System
+          </h1>
+          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            Find your seat and view candidate information with our modern, intuitive interface
+          </p>
+        </div>
+
+        {/* Selection Cards Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Location Selection Card */}
+          <div className="bg-white rounded-2xl shadow-xl border border-blue-100 p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-200">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-4 shadow-lg">
+                <span className="text-2xl">📍</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Select Location
+              </h3>
+              <p className="text-slate-600">
+                Enter your city and center codes to get started
+              </p>
             </div>
 
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center"
-            }}>
-              <label style={{
-                color: "#0A4988",
-                fontWeight: "600",
-                marginBottom: "8px",
-                fontSize: "15px",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px"
-              }}>
-                🏢 Center Code
-              </label>
-              <input
-                type="number"
-                value={centerCode}
-                onChange={(e) => setCenterCode(e.target.value)}
-                placeholder="e.g., 201"
-                min="1"
-                style={{
-                  padding: "12px 16px",
-                  border: "2px solid #0089BB",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  width: "100%",
-                  transition: "all 0.3s ease",
-                  textAlign: "center",
-                  fontWeight: "500",
-                  backgroundColor: "#FFF"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#0070A9";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(0,112,169,0.1)";
-                  e.target.style.transform = "scale(1.02)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#0089BB";
-                  e.target.style.boxShadow = "none";
-                  e.target.style.transform = "scale(1)";
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '.') {
-                    e.preventDefault();
-                  }
-                }}
-              />
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <span className="text-lg">🏙️</span>
+                  City
+                </label>
+                <select
+                  value={selectedCity ? selectedCity.cityCode : ""}
+                  onChange={(e) => {
+                    const city = cities.find(c => c.cityCode == e.target.value);
+                    setSelectedCity(city);
+                    setCityCode(city ? city.cityCode : "");
+                  }}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-center font-medium bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 text-lg"
+                  disabled={citiesLoading}
+                >
+                  <option value="">{citiesLoading ? "Loading..." : "Select City"}</option>
+                  {cities.map(city => (
+                    <option key={city.cityCode} value={city.cityCode}>{city.cityCode} - {city.cityNameHindi}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <span className="text-lg">🏢</span>
+                  Centre
+                </label>
+                <select
+                  value={selectedCentre ? selectedCentre.centreCode : ""}
+                  onChange={(e) => {
+                    const centre = centres.find(c => c.centreCode == e.target.value);
+                    setSelectedCentre(centre);
+                    setCenterCode(centre ? centre.centreCode : "");
+                  }}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-center font-medium bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 text-lg"
+                  disabled={!selectedCity || centresLoading}
+                >
+                  <option value="">{centresLoading ? "Loading..." : "Select Centre"}</option>
+                  {centres.map(centre => (
+                    <option key={centre.id} value={centre.centreCode}>{centre.centreCode} - {centre.centreNameHindi}</option>
+                  ))}
+                </select>
+              </div>
+
+              {(selectedCity || selectedCentre) && (
+                <div className="text-center p-3 rounded-lg bg-blue-50 border border-blue-200">
+                  <p className="text-sm font-medium text-blue-800">
+                    {selectedCity && selectedCentre ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="text-emerald-600">✅</span>
+                        Ready to select a room!
+                      </span>
+                    ) : (
+                      "Select both city and centre to continue"
+                    )}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
-          {(cityCode || centerCode) && (
-            <div style={{
-              fontSize: "14px",
-              color: "#666",
-              fontStyle: "italic",
-              textAlign: "center",
-              marginTop: "16px"
-            }}>
-              {cityCode && centerCode ? "✅ Ready to select a room!" : "Enter both codes to continue"}
+          {/* Room Selector Card */}
+          {selectedCity && selectedCentre && (
+            <div className="bg-white rounded-2xl shadow-xl border border-blue-100 p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:border-blue-200">
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full mb-4 shadow-lg">
+                  <span className="text-2xl">🏫</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Select Room
+                </h3>
+                <p className="text-slate-600">
+                  Choose your examination room
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center min-h-[200px]">
+                <RoomSelector
+                  cityCode={cityCode}
+                  centerCode={centerCode}
+                  onRoomSelect={handleRoomSelect}
+                  selectedRoom={selectedRoom}
+                />
+              </div>
             </div>
           )}
         </div>
 
-        {/* Room Selector Column */}
-        {cityCode && centerCode && (
-          <div style={{
-            flex: "1",
-            minWidth: "300px",
-            backgroundColor: "#FFFDE7",
-            padding: "24px",
-            borderRadius: "12px",
-            border: "2px solid #0070A9",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-            display: "flex",
-            flexDirection: "column",
-            height: "fit-content"
-          }}>
-            <div style={{
-              textAlign: "center",
-              marginBottom: "16px"
-            }}>
-              <h3 style={{
-                color: "#0A4988",
-                fontSize: "18px",
-                fontWeight: "600",
-                margin: "0 0 4px 0"
-              }}>
-                🏫 Available Room
-              </h3>
-              <p style={{
-                color: "#666",
-                fontSize: "14px",
-                margin: 0,
-                fontWeight: "400"
-              }}>
-                Choose your examination room
-              </p>
-            </div>
+        {/* Seat Matrix Section */}
+        {selectedCity && selectedCentre && (
+          <div className="space-y-8">
+            {/* Seat Matrix Area */}
+            {loading && (
+              <div className="bg-white rounded-2xl shadow-xl border border-blue-100 p-12 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-6">
+                  <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Loading Seat Data
+                </h3>
+                <p className="text-slate-600 text-lg">
+                  Please wait while we fetch the information
+                </p>
+              </div>
+            )}
 
-            <div style={{
-              flex: "1",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}>
-              <RoomSelector
-                cityCode={cityCode}
-                centerCode={centerCode}
-                onRoomSelect={handleRoomSelect}
-                selectedRoom={selectedRoom}
-              />
-            </div>
+            {error && (
+              <div className="bg-white rounded-2xl shadow-xl border border-red-200 p-12 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-red-500 to-red-600 rounded-full mb-6">
+                  <span className="text-3xl">⚠️</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Error Loading Data
+                </h3>
+                <p className="text-slate-600 text-lg mb-6">
+                  {error}
+                </p>
+                <button
+                  onClick={() => selectedRoom && fetchSeatData()}
+                  className="inline-flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                >
+                  <span className="mr-2">🔄</span>
+                  Try Again
+                </button>
+              </div>
+            )}
+
+            {/* Seat Matrix Display */}
+            {selectedRoom && seats.length > 0 && (
+              <div
+                className="bg-white rounded-2xl shadow-xl border border-blue-100 overflow-hidden"
+                style={{
+                  opacity: animateGrid ? 1 : 0,
+                  transform: animateGrid ? "translateY(0)" : "translateY(30px)",
+                  transition: "all 0.5s ease-in-out"
+                }}
+              >
+                {/* Header */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 text-white">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl font-bold mb-1 flex items-center gap-3">
+                        <span className="text-3xl">🏫</span>
+                        Room {selectedRoom} - Seat Matrix
+                      </h3>
+                      <p className="text-blue-100">
+                        Click on any seat to view candidate details
+                      </p>
+                    </div>
+
+                    {/* Layout Toggle */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-blue-100 font-medium">Layout:</span>
+                      <div className="flex bg-white/10 rounded-xl p-1 backdrop-blur-sm">
+                        <button
+                          onClick={() => setMatrixOrientation("4x6")}
+                          className={`w-20 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
+                            matrixOrientation === "4x6"
+                              ? 'bg-white text-blue-600 shadow-lg'
+                              : 'text-blue-100 hover:bg-white/20'
+                          }`}
+                        >
+                          <span>📐</span>
+                          4×6
+                        </button>
+                        <button
+                          onClick={() => setMatrixOrientation("6x4")}
+                          className={`w-20 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 ${
+                            matrixOrientation === "6x4"
+                              ? 'bg-white text-blue-600 shadow-lg'
+                              : 'text-blue-100 hover:bg-white/20'
+                          }`}
+                        >
+                          <span>📏</span>
+                          6×4
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-8">
+
+                  {/* Stats and Legend */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    {/* Room Stats */}
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
+                      <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="text-2xl">📊</span>
+                        Room Statistics
+                      </h4>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="text-center p-3 bg-white rounded-lg shadow-sm border border-blue-100">
+                          <div className="text-2xl font-bold text-blue-600 mb-1">
+                            {seats.filter(s => s.name).length}
+                          </div>
+                          <div className="text-sm text-slate-600 font-medium">
+                            Occupied
+                          </div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded-lg shadow-sm border border-blue-100">
+                          <div className="text-2xl font-bold text-emerald-600 mb-1">
+                            {seats.length - seats.filter(s => s.name).length}
+                          </div>
+                          <div className="text-sm text-slate-600 font-medium">
+                            Available
+                          </div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded-lg shadow-sm border border-blue-100">
+                          <div className="text-2xl font-bold text-slate-600 mb-1">
+                            {seats.length}
+                          </div>
+                          <div className="text-sm text-slate-600 font-medium">
+                            Total Seats
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-6 rounded-xl border border-slate-200">
+                      <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="text-2xl">🗺️</span>
+                        Legend
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 bg-white border-2 border-slate-400 rounded-lg shadow-sm"></div>
+                          <span className="text-sm font-medium text-slate-700">Available Seat</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 bg-blue-500 border-2 border-blue-600 rounded-lg shadow-sm"></div>
+                          <span className="text-sm font-medium text-slate-700">Occupied Seat</span>
+                        </div>
+                        <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
+                          <span className="text-lg">👆</span>
+                          <span className="text-sm font-medium text-slate-700">Click seats for details</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Seat Grid */}
+                  <div className="flex justify-center">
+                    {renderSeatGrid()}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Empty Room State */}
+            {selectedRoom && seats.length === 0 && !loading && (
+              <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-12 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-slate-400 to-slate-500 rounded-full mb-6">
+                  <span className="text-3xl">🪑</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  Room {selectedRoom} is Empty
+                </h3>
+                <p className="text-slate-600 text-lg mb-4">
+                  No candidates have been assigned to this room yet.
+                </p>
+                <p className="text-slate-500 text-sm">
+                  Try selecting a different room or check back later.
+                </p>
+              </div>
+            )}
           </div>
         )}
-      </div>
 
-      {cityCode && centerCode && (
-        <div style={{
-          width: "100%",
-         // maxWidth: "900px",
-          marginLeft: "auto",
-          marginRight: "auto"
-        }}>
-          {/* Seat Matrix Area */}
-          {loading && (
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "40px",
-              backgroundColor: "#FFFDE7",
-              borderRadius: "12px",
-              border: "2px solid #0070A9",
-              minHeight: "200px"
-            }}>
-              <div style={{
-                width: "40px",
-                height: "40px",
-                border: "4px solid #E3F2FD",
-                borderTop: "4px solid #0070A9",
-                borderRadius: "50%",
-                animation: "spin 1s linear infinite",
-                marginBottom: "16px"
-              }}></div>
-              <p style={{
-                color: "#0070A9",
-                fontSize: "18px",
-                fontWeight: "600",
-                margin: 0,
-                textAlign: "center"
-              }}>
-                🔄 Loading seat data...
-              </p>
-              <p style={{
-                color: "#666",
-                fontSize: "14px",
-                margin: "8px 0 0 0",
-                textAlign: "center"
-              }}>
-                Please wait while we fetch the information
-              </p>
-            </div>
-          )}
-          {error && (
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "32px",
-              backgroundColor: "#FFF5F5",
-              borderRadius: "12px",
-              border: "2px solid #DC3545",
-              minHeight: "200px",
-              textAlign: "center"
-            }}>
-              <div style={{
-                fontSize: "48px",
-                marginBottom: "16px"
-              }}>
-                ⚠️
-              </div>
-              <h4 style={{
-                color: "#DC3545",
-                fontSize: "18px",
-                fontWeight: "600",
-                margin: "0 0 8px 0"
-              }}>
-                Error Loading Data
-              </h4>
-              <p style={{
-                color: "#666",
-                fontSize: "16px",
-                margin: 0,
-                lineHeight: "1.5"
-              }}>
-                {error}
-              </p>
-              <button
-                onClick={() => selectedRoom && fetchSeatData()}
-                style={{
-                  marginTop: "16px",
-                  padding: "10px 20px",
-                  backgroundColor: "#0070A9",
-                  color: "#FFFDD0",
-                  border: "none",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "all 0.3s ease"
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = "#0089BB"}
-                onMouseLeave={(e) => e.target.style.backgroundColor = "#0070A9"}
-              >
-                🔄 Try Again
-              </button>
-            </div>
-          )}
+        {/* Sidebar Overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 transition-all duration-300 ease-in-out"
+            onClick={closeSidebar}
+          />
+        )}
 
-          {selectedRoom && seats.length > 0 && (
-            <div style={{
-              transition: "all 0.5s ease-in-out",
-              opacity: animateGrid ? 1 : 0,
-              transform: animateGrid ? "translateY(0)" : "translateY(30px)"
-            }}>
-              <div style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "16px",
-                marginBottom: "24px"
-              }}>
-                <h3 style={{
-                  color: "#0A4988",
-                  fontSize: "clamp(1.4em, 4vw, 1.8em)",
-                  fontWeight: "600",
-                  margin: 0,
-                  textAlign: "center",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px"
-                }}>
-                  🏫 Room {selectedRoom} - Seat Matrix
-                </h3>
-
-                <div style={{
-                  display: "flex",
-                  gap: "12px",
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}>
-                  <span style={{
-                    color: "#666",
-                    fontSize: "14px",
-                    fontWeight: "500"
-                  }}>
-                    Layout:
-                  </span>
-                  <button
-                    onClick={() => setMatrixOrientation("4x6")}
-                    style={{
-                      padding: "12px 24px",
-                      backgroundColor: matrixOrientation === "4x6" ? "#0070A9" : "#FFF",
-                      color: matrixOrientation === "4x6" ? "#FFFDD0" : "#0A4988",
-                      border: `2px solid ${matrixOrientation === "4x6" ? "#0070A9" : "#0089BB"}`,
-                      borderRadius: "8px",
-                      fontSize: "15px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      transition: "all 0.3s ease",
-                      boxShadow: matrixOrientation === "4x6" ? "0 4px 8px rgba(0,0,0,0.2)" : "0 2px 4px rgba(0,0,0,0.1)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px"
-                    }}
-                    onMouseEnter={(e) => {
-                      if (matrixOrientation !== "4x6") {
-                        e.target.style.backgroundColor = "#E3F2FD";
-                        e.target.style.borderColor = "#0070A9";
-                        e.target.style.transform = "translateY(-1px)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (matrixOrientation !== "4x6") {
-                        e.target.style.backgroundColor = "#FFF";
-                        e.target.style.borderColor = "#0089BB";
-                        e.target.style.transform = "translateY(0)";
-                      }
-                    }}
-                  >
-                    📐 4 × 6
-                  </button>
-
-                  <button
-                    onClick={() => setMatrixOrientation("6x4")}
-                    style={{
-                      padding: "12px 24px",
-                      backgroundColor: matrixOrientation === "6x4" ? "#0070A9" : "#FFF",
-                      color: matrixOrientation === "6x4" ? "#FFFDD0" : "#0A4988",
-                      border: `2px solid ${matrixOrientation === "6x4" ? "#0070A9" : "#0089BB"}`,
-                      borderRadius: "8px",
-                      fontSize: "15px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      transition: "all 0.3s ease",
-                      boxShadow: matrixOrientation === "6x4" ? "0 4px 8px rgba(0,0,0,0.2)" : "0 2px 4px rgba(0,0,0,0.1)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px"
-                    }}
-                    onMouseEnter={(e) => {
-                      if (matrixOrientation !== "6x4") {
-                        e.target.style.backgroundColor = "#E3F2FD";
-                        e.target.style.borderColor = "#0070A9";
-                        e.target.style.transform = "translateY(-1px)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (matrixOrientation !== "6x4") {
-                        e.target.style.backgroundColor = "#FFF";
-                        e.target.style.borderColor = "#0089BB";
-                        e.target.style.transform = "translateY(0)";
-                      }
-                    }}
-                  >
-                    📏 6 × 4
-                  </button>
-                </div>
-              </div>
-
-              {/* Stats and Legend */}
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "20px",
-                flexWrap: "wrap",
-                marginBottom: "20px"
-              }}>
-                {/* Room Stats */}
-                <div style={{
-                  backgroundColor: "#E3F2FD",
-                  padding: "12px 16px",
-                  borderRadius: "8px",
-                  border: "2px solid #0070A9",
-                  flex: "1",
-                  minWidth: "200px"
-                }}>
-                  <h4 style={{
-                    color: "#0A4988",
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    margin: "0 0 8px 0",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px"
-                  }}>
-                    📊 Room Statistics
-                  </h4>
-                  <div style={{
-                    display: "flex",
-                    gap: "16px",
-                    flexWrap: "wrap"
-                  }}>
-                    <div style={{
-                      textAlign: "center"
-                    }}>
-                      <div style={{
-                        fontSize: "20px",
-                        fontWeight: "700",
-                        color: "#0070A9"
-                      }}>
-                        {seats.filter(s => s.name).length}
-                      </div>
-                      <div style={{
-                        fontSize: "12px",
-                        color: "#666",
-                        fontWeight: "500"
-                      }}>
-                        Occupied
-                      </div>
-                    </div>
-                    <div style={{
-                      textAlign: "center"
-                    }}>
-                      <div style={{
-                        fontSize: "20px",
-                        fontWeight: "700",
-                        color: "#0A4988"
-                      }}>
-                        {seats.length - seats.filter(s => s.name).length}
-                      </div>
-                      <div style={{
-                        fontSize: "12px",
-                        color: "#666",
-                        fontWeight: "500"
-                      }}>
-                        Available
-                      </div>
-                    </div>
-                    <div style={{
-                      textAlign: "center"
-                    }}>
-                      <div style={{
-                        fontSize: "20px",
-                        fontWeight: "700",
-                        color: "#666"
-                      }}>
-                        {seats.length}
-                      </div>
-                      <div style={{
-                        fontSize: "12px",
-                        color: "#666",
-                        fontWeight: "500"
-                      }}>
-                        Total Seats
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Legend */}
-                <div style={{
-                  display: "flex",
-                  gap: "16px",
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  backgroundColor: "#F8F9FA",
-                  padding: "12px 16px",
-                  borderRadius: "8px",
-                  border: "2px solid #E9ECEF",
-                  flex: "1",
-                  minWidth: "250px"
-                }}>
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    fontSize: "13px",
-                    fontWeight: "500",
-                    color: "#0A4988"
-                  }}>
-                    <div style={{
-                      width: "16px",
-                      height: "16px",
-                      backgroundColor: "#FFF",
-                      border: "2px solid #0A4988",
-                      borderRadius: "3px"
-                    }}></div>
-                    <span>Available</span>
-                  </div>
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    fontSize: "13px",
-                    fontWeight: "500",
-                    color: "#0A4988"
-                  }}>
-                    <div style={{
-                      width: "16px",
-                      height: "16px",
-                      backgroundColor: "#0089BB",
-                      border: "2px solid #0070A9",
-                      borderRadius: "3px"
-                    }}></div>
-                    <span>Occupied</span>
-                  </div>
-                  <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    fontSize: "13px",
-                    fontWeight: "500",
-                    color: "#666"
-                  }}>
-                    <span>👆 Click for details</span>
-                  </div>
-                </div>
-              </div>
-
-              <div >
-                {renderSeatGrid()}
-              </div>
-            </div>
-          )}
-
-          {selectedRoom && seats.length === 0 && !loading && (
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "40px",
-              backgroundColor: "#FFFDE7",
-              borderRadius: "12px",
-              border: "2px solid #0070A9",
-              minHeight: "200px",
-              textAlign: "center"
-            }}>
-              <div style={{
-                fontSize: "48px",
-                marginBottom: "16px",
-                opacity: 0.7
-              }}>
-                🪑
-              </div>
-              <h4 style={{
-                color: "#0A4988",
-                fontSize: "18px",
-                fontWeight: "600",
-                margin: "0 0 8px 0"
-              }}>
-                Room {selectedRoom} is Empty
-              </h4>
-              <p style={{
-                color: "#666",
-                fontSize: "16px",
-                margin: 0,
-                lineHeight: "1.5"
-              }}>
-                No candidates have been assigned to this room yet.
-              </p>
-              <p style={{
-                color: "#888",
-                fontSize: "14px",
-                margin: "8px 0 0 0",
-                fontStyle: "italic"
-              }}>
-                Try selecting a different room or check back later.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Overlay when sidebar is open */}
-      {sidebarOpen && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            zIndex: 999,
-            transition: "opacity 0.3s ease-in-out"
-          }}
-          onClick={closeSidebar}
+        {/* Candidate Details Sidebar */}
+        <CandidateDetailsSidebar
+          candidate={selectedCandidate}
+          onClose={closeSidebar}
+          isOpen={sidebarOpen}
         />
-      )}
-
-      {/* Candidate Details Sidebar */}
-      <CandidateDetailsSidebar
-        candidate={selectedCandidate}
-        onClose={closeSidebar}
-        isOpen={sidebarOpen}
-      />
+      </div>
     </div>
   );
 };

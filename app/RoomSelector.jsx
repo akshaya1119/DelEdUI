@@ -18,7 +18,7 @@ const RoomSelector = ({ cityCode, centerCode, onRoomSelect, selectedRoom }) => {
     setError(null);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/Centres/get-rooms-by-city&centre?cityCode=${cityCode}&centreCode=${centerCode}`
+        `${import.meta.env.VITE_API_URL_SEATMATRIX}/api/Centres/get-rooms-by-city&centre?cityCode=${cityCode}&centreCode=${centerCode}`
       );
       const data = await response.json();
 

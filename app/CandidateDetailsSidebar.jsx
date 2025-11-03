@@ -16,7 +16,7 @@ const CandidateDetailsSidebar = ({ candidate, onClose, isOpen }) => {
     setError(null);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/Registrations/get-registration-details/${registrationNo}`
+        `${import.meta.env.VITE_API_URL_SEATMATRIX}/api/Registrations/get-registration-details/${registrationNo}`
       );
       const data = await response.json();
 
