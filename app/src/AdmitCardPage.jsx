@@ -21,7 +21,7 @@ const batchSize = 3;
 const currentStartRef = useRef(0);
 const [isDownloading, setIsDownloading] = useState(false);
 
-  const registrationNo = "2500001"; // Example number — can be dynamic
+  const registrationNo = "2500007"; // Example number — can be dynamic
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -233,8 +233,8 @@ const [isDownloading, setIsDownloading] = useState(false);
             subject={reg.subject || "Some Subject"}
             photo={reg.imagePath}      // already Base64
             sign={reg.signaturePath}   // already Base64
-            centre_name={reg.assignedCentre?.centreName || ""}
-            city_name={reg.assignedCentre?.cityName || ""}
+            centre_name={reg.assignedBoth?.centreName || ""}
+            city_name={reg.assignedBoth?.cityName || ""}
             idno={reg.photoId}
           />
         );
@@ -380,9 +380,9 @@ const [isDownloading, setIsDownloading] = useState(false);
           photo={data.imagePath}
           sign={data.signaturePath}
           centre_name={
-            data.assignedCentre ? data.assignedCentre.centreName : ""
+            data.assignedBoth ? data.assignedBoth.centreName : ""
           }
-          city_name={data.assignedCentre ? data.assignedCentre.cityName : ""}
+          city_name={data.assignedBoth ? data.assignedBoth.cityName : ""}
           idno={data.photoId}
         />
       );
@@ -529,13 +529,13 @@ const [isDownloading, setIsDownloading] = useState(false);
             photo={registrationData.imagePath}
             sign={registrationData.signaturePath}
             centre_name={
-              registrationData.assignedCentre
-                ? registrationData.assignedCentre.centreName
+              registrationData.assignedBoth
+                ? registrationData.assignedBoth.centreName
                 : ""
             }
             city_name={
-              registrationData.assignedCentre
-                ? registrationData.assignedCentre.cityName
+              registrationData.assignedBoth
+                ? registrationData.assignedBoth.cityName
                 : ""
             }
             idno={registrationData.photoId}
