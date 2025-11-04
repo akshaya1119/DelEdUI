@@ -15,10 +15,13 @@ const AdmitCard = ({
   photo,
   sign,
   centre_name,
+  centreCode,
+  cityCode,
   city_name,
   idtype,
   idno,
 }) => {
+  {console.log(centreCode)}
   return (
     <div className="hindi admit-card">
       {/* Header */}
@@ -113,8 +116,8 @@ const AdmitCard = ({
 
           <tr>
             <td colSpan="5" style={{ padding: "5px" }} className="hind-regular">
-              परीक्षा शहर का नाम : <b>{city_name}</b><br />
-              परीक्षा केंद्र का नाम : <b>{centre_name}</b>
+              परीक्षा शहर का नाम : <b>({cityCode}) {city_name}</b><br />
+              परीक्षा केंद्र का नाम : <b>({centreCode}) {centre_name}</b>
             </td>
             <td colSpan="2" style={{ textAlign: "center", lineHeight: "25px" }}>
               परीक्षा तिथि एवं समय<br />

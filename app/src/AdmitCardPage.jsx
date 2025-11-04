@@ -21,7 +21,7 @@ const batchSize = 3;
 const currentStartRef = useRef(0);
 const [isDownloading, setIsDownloading] = useState(false);
 
-  const registrationNo = "2500007"; // Example number — can be dynamic
+  const registrationNo = "2500017"; // Example number — can be dynamic
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -217,7 +217,7 @@ const [isDownloading, setIsDownloading] = useState(false);
         tempDiv.style.left = "-9999px";
         tempDiv.style.top = "-9999px";
         document.body.appendChild(tempDiv);
-
+{console.log('QR Code URL:', reg.assignedBoth);}
         const admitCard = (
           <AdmitCard
             qrcode={qrUrl}
@@ -234,6 +234,8 @@ const [isDownloading, setIsDownloading] = useState(false);
             photo={reg.imagePath}      // already Base64
             sign={reg.signaturePath}   // already Base64
             centre_name={reg.assignedBoth?.centreName || ""}
+            centreCode = {reg.assignedBoth?.centreCode || ""}
+            cityCode = {reg.assignedBoth?.cityCode || ""}
             city_name={reg.assignedBoth?.cityName || ""}
             idno={reg.photoId}
           />
@@ -531,6 +533,16 @@ const [isDownloading, setIsDownloading] = useState(false);
             centre_name={
               registrationData.assignedBoth
                 ? registrationData.assignedBoth.centreName
+                : ""
+            }
+            centreCode={
+              registrationData.assignedBoth
+                ? registrationData.assignedBoth.centreCode
+                : ""
+            }
+            cityCode={
+              registrationData.assignedBoth
+                ? registrationData.assignedBoth.cityCode
                 : ""
             }
             city_name={
