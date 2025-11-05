@@ -247,7 +247,7 @@ const [isDownloading, setIsDownloading] = useState(false);
           setTimeout(resolve, 400);
         });
 
-        const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 2 });
+        const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 1 });
         document.body.removeChild(tempDiv);
 
         const pdf = new jsPDF("p", "mm", "a4");
@@ -267,7 +267,7 @@ const [isDownloading, setIsDownloading] = useState(false);
 
         const x = (pageWidth - imgWidth) / 2;
         const y = (pageHeight - imgHeight) / 2;
-        pdf.addImage(canvas.toDataURL("image/png"), "PNG", x, y, imgWidth, imgHeight);
+        pdf.addImage(canvas.toDataURL("image/jpeg", 0.5), "JPEG", x, y, imgWidth, imgHeight);
 
         zip.file(`${reg.rollNumber}.pdf`, pdf.output("blob"));
       } catch (innerErr) {
@@ -300,8 +300,8 @@ const [isDownloading, setIsDownloading] = useState(false);
     clone.style.top = "-9999px";
     document.body.appendChild(clone);
 
-    const canvas = await html2canvas(clone, { useCORS: true, scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
+    const canvas = await html2canvas(clone, { useCORS: true, scale: 1 });
+    const imgData = canvas.toDataURL("image/jpeg", 0.5);
     document.body.removeChild(clone);
 
     const pdf = new jsPDF("p", "mm", "a4");
@@ -321,7 +321,7 @@ const [isDownloading, setIsDownloading] = useState(false);
 
     const x = (pageWidth - imgWidth) / 2;
     const y = (pageHeight - imgHeight) / 2;
-    pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
+    pdf.addImage(imgData, "JPEG", x, y, imgWidth, imgHeight);
     pdf.save("AdmitCard.pdf");
   };
 
@@ -396,9 +396,9 @@ const [isDownloading, setIsDownloading] = useState(false);
       });
 
       // Convert to PDF
-      const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 2 });
+      const canvas = await html2canvas(tempDiv, { useCORS: true, scale: 1 });
       document.body.removeChild(tempDiv);
-      const imgData = canvas.toDataURL("image/png");
+      const imgData = canvas.toDataURL("image/jpeg", 0.5);
 
       const pdf = new jsPDF("p", "mm", "a4");
       const pageWidth = 210;
@@ -417,7 +417,7 @@ const [isDownloading, setIsDownloading] = useState(false);
 
       const x = (pageWidth - imgWidth) / 2;
       const y = (pageHeight - imgHeight) / 2;
-      pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
+      pdf.addImage(imgData, "JPEG", x, y, imgWidth, imgHeight);
       const pdfBlob = pdf.output("blob");
 
       // Add PDF to ZIP

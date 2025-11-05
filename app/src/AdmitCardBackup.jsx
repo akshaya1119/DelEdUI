@@ -116,8 +116,8 @@ const AdmitCard = ({
 
           <tr>
             <td colSpan="5" style={{ padding: "5px" }} className="hind-regular">
-              परीक्षा शहर का नाम / कोड : <b> {city_name} / ({cityCode})</b><br />
-              परीक्षा केंद्र का नाम / कोड  : <b> {centre_name} / ({centreCode})</b>
+              परीक्षा शहर का नाम / कोड : <b> {city_name}  ({cityCode})</b><br />
+              परीक्षा केंद्र का नाम : <b> {centre_name} ({centreCode})</b>
             </td>
             <td colSpan="2" style={{ textAlign: "center", lineHeight: "25px" }}>
               परीक्षा तिथि एवं समय<br />
