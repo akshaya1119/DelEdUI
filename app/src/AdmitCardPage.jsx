@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, use } from "react";
 import { createRoot } from "react-dom/client";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import JSZip from "jszip";
@@ -15,13 +15,13 @@ const AdmitCardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const { regNo } = useParams();
+  const registrationNo = regNo || ""; // Use URL param or default
 
   const[batchStart,setBatchStart] = useState(0);
 const batchSize = 3;
 const currentStartRef = useRef(0);
 const [isDownloading, setIsDownloading] = useState(false);
-
-  const registrationNo = "2500017"; // Example number — can be dynamic
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
@@ -44,14 +44,9 @@ const [isDownloading, setIsDownloading] = useState(false);
 
         if (response.ok) {
           setRegistrationData(data);
-          const qrData = {
-            id: data.rollNumber,
-            name: data.name,
-            serial: data.rollNumber.toString(),
-            barcode: data.rollNumber.toString(),
-          };
+          const qrUrl = `http://ukdeled.com/admtstamp.aspx?id=${registrationNo}`;
 
-          QRCode.generate(qrData)
+          QRCode.generate(qrUrl)
             .then(setQrCodeUrl)
             .catch((err) => {
               console.error("Failed to generate QR code:", err);
@@ -68,7 +63,9 @@ const [isDownloading, setIsDownloading] = useState(false);
       }
     };
 
-    fetchRegistrationDetails();
+    if (registrationNo) {
+      fetchRegistrationDetails();
+    }
   }, [registrationNo]);
 
   // const downloadBatch = async () => {
@@ -204,12 +201,7 @@ const [isDownloading, setIsDownloading] = useState(false);
 
     for (const reg of registrations) {
       try {
-        const qrUrl = await QRCode.generate({
-          id: reg.rollNumber,
-          name: reg.name,
-          serial: reg.rollNumber.toString(),
-          barcode: reg.rollNumber.toString(),
-        });
+        const qrUrl = await QRCode.generate(`http://ukdeled.com/admtstamp.aspx?id=${reg.rollNumber}`);
 
         const tempDiv = document.createElement("div");
         tempDiv.style.width = "1000px";
@@ -217,7 +209,6 @@ const [isDownloading, setIsDownloading] = useState(false);
         tempDiv.style.left = "-9999px";
         tempDiv.style.top = "-9999px";
         document.body.appendChild(tempDiv);
-{console.log('QR Code URL:', reg.assignedBoth);}
         const admitCard = (
           <AdmitCard
             qrcode={qrUrl}
@@ -322,7 +313,7 @@ const [isDownloading, setIsDownloading] = useState(false);
     const x = (pageWidth - imgWidth) / 2;
     const y = (pageHeight - imgHeight) / 2;
     pdf.addImage(imgData, "JPEG", x, y, imgWidth, imgHeight);
-    pdf.save("AdmitCard.pdf");
+    pdf.save(`${registrationNo}.pdf`);
   };
 
   const handleDownloadMultiple = async () => {
@@ -349,13 +340,7 @@ const [isDownloading, setIsDownloading] = useState(false);
       if (!res.ok || !data) continue;
 
       // Generate QR code
-      const qrData = {
-        id: data.rollNumber,
-        name: data.name,
-        serial: data.rollNumber.toString(),
-        barcode: data.rollNumber.toString(),
-      };
-      const qrUrl = await QRCode.generate(qrData);
+      const qrUrl = await QRCode.generate(`http://ukdeled.com/admtstamp.aspx?id=${data.regNo}`);
 
       // Create temporary container
       const tempDiv = document.createElement("div");
@@ -457,7 +442,7 @@ const [isDownloading, setIsDownloading] = useState(false);
 
   return (
     <div>
-      <nav style={{
+      {/* <nav style={{
         backgroundColor: "#0A4988",
         padding: "10px",
         marginBottom: "20px",
@@ -496,12 +481,12 @@ const [isDownloading, setIsDownloading] = useState(false);
         >
           Seat Matrix
         </Link>
-      </nav>
+      </nav> */}
       <div style={{ textAlign: "right", marginTop: "10px" }}>
-        <button className="download-btn" onClick={() => handleDownloadSingle(registrationData.regNo)}>
+        <button className="download-btn" onClick={() => handleDownloadSingle(registrationNo)}>
           📥 Download Admit Card PDF
         </button>
-        <button
+        {/* <button
           className="download-btn"
           style={{ marginLeft: "10px" }}
           onClick={handleDownloadMultiple}
@@ -511,7 +496,7 @@ const [isDownloading, setIsDownloading] = useState(false);
 
         <button onClick={downloadBatch} disabled={isDownloading}>
         📦 Download Admit Cards (Batch of {batchSize})
-      </button>
+      </button> */}
       </div>
 
       <div ref={componentRef}>

@@ -8,6 +8,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<AdmitCardPage />} />
+        <Route path="/admit-card/:regNo" element={<AdmitCardPage />} />
         <Route path="/seat-matrix" element={<SeatMatrix />} />
       </Routes>
     </Router>
